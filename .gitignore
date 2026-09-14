@@ -1,0 +1,50 @@
+# Unity ignore rules
+[L|l]ibrary/
+[T|t]emp/
+[O|o]bj/
+[B|b]uild/
+[B|b]uilds/
+[L|l]ogs/
+[M|m]emoryCaptures/
+[U|u]serSettings/
+
+# Asset store packages / cached files
+AssetStoreTools*
+
+# Visual Studio / Rider / VS Code
+.vs/
+.idea/
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.opendb
+*.VC.db
+
+# OS generated
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Python / Django
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.env
+db.sqlite3
+media/
+static/
+.pytest_cache/
