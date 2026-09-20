@@ -88,7 +88,7 @@ namespace BattleRoyale.Editor
             RenderSettings.ambientGroundColor = new Color(0.28f, 0.25f, 0.20f);
             RenderSettings.fog = true;
             RenderSettings.fogColor = new Color(0.65f, 0.78f, 0.90f);
-            RenderSettings.fogMode = FogMode.ExponentialWithDistance;
+            RenderSettings.fogMode = FogMode.Exponential;
             RenderSettings.fogDensity = 0.0022f;
 
             // 6. Create Ground Environment & Perimeter Mountains (500m x 500m)
