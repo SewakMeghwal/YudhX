@@ -33,6 +33,8 @@ namespace BattleRoyale.HealthSystem
 
         public float CurrentHealth => currentHealth;
         public float MaxHealth => maxHealth;
+        public float CurrentArmor => vestDurability + helmetDurability > 0 ? vestDurability + helmetDurability : 75f;
+        public float MaxArmor => 100f;
         public float CurrentDbnoHealth => currentDbnoHealth;
         public bool IsDead => isDead;
         public bool IsDowned => isDowned;
