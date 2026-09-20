@@ -78,7 +78,8 @@ namespace BattleRoyale.Editor
             playerObj.name = "Player";
             playerObj.transform.position = new Vector3(0, 1.5f, 0);
 
-            var charController = playerObj.GetComponent<CharacterController>() ?? playerObj.AddComponent<CharacterController>();
+            var charController = playerObj.GetComponent<CharacterController>();
+            if (charController == null) charController = playerObj.AddComponent<CharacterController>();
             charController.height = 2.0f;
             charController.center = new Vector3(0, 1.0f, 0);
 
@@ -97,9 +98,15 @@ namespace BattleRoyale.Editor
 
             // 7. Configure Main Camera
             var mainCamObj = Camera.main != null ? Camera.main.gameObject : new GameObject("Main Camera");
-            var tpCam = mainCamObj.GetComponent<ThirdPersonCamera>() ?? mainCamObj.AddComponent<ThirdPersonCamera>();
-            var camCollision = mainCamObj.GetComponent<CameraCollisionHandler>() ?? mainCamObj.AddComponent<CameraCollisionHandler>();
-            var camInput = mainCamObj.GetComponent<CameraInputHandler>() ?? mainCamObj.AddComponent<CameraInputHandler>();
+            
+            var tpCam = mainCamObj.GetComponent<ThirdPersonCamera>();
+            if (tpCam == null) tpCam = mainCamObj.AddComponent<ThirdPersonCamera>();
+
+            var camCollision = mainCamObj.GetComponent<CameraCollisionHandler>();
+            if (camCollision == null) camCollision = mainCamObj.AddComponent<CameraCollisionHandler>();
+
+            var camInput = mainCamObj.GetComponent<CameraInputHandler>();
+            if (camInput == null) camInput = mainCamObj.AddComponent<CameraInputHandler>();
 
             SetPrivateField(tpCam, "settings", camSettings);
             SetPrivateField(tpCam, "targetPlayer", playerObj.transform);
