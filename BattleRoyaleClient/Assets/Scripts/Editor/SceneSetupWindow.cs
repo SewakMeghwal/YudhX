@@ -49,34 +49,69 @@ namespace BattleRoyale.Editor
             var antiCheatSettings = CreateAsset<AntiCheatSettings>("Assets/ScriptableObjects/AntiCheatSettings.asset");
             var matchConfig = CreateAsset<MatchConfig>("Assets/ScriptableObjects/MatchConfig.asset");
 
-            // 4. Create Materials
-            Material groundMat = CreateColoredMaterial("Mat_Terrain", new Color(0.2f, 0.35f, 0.18f)); // Dark Forest Green
-            Material roadMat = CreateColoredMaterial("Mat_Road", new Color(0.15f, 0.15f, 0.15f)); // Dark Asphalt Gray
-            Material playerMat = CreateColoredMaterial("Mat_Player", new Color(0.1f, 0.3f, 0.6f)); // Tactical Navy Blue
-            Material visorMat = CreateColoredMaterial("Mat_Visor", new Color(0.1f, 0.9f, 1.0f)); // Cyan Visor
-            Material vestMat = CreateColoredMaterial("Mat_Vest", new Color(0.2f, 0.2f, 0.2f)); // Armor Vest Dark Gray
-            Material rifleMat = CreateColoredMaterial("Mat_Rifle", new Color(0.1f, 0.1f, 0.1f)); // Gun Metal
-            Material bldgMat = CreateColoredMaterial("Mat_Building", new Color(0.5f, 0.5f, 0.52f)); // Concrete Gray
-            Material bldgRoofMat = CreateColoredMaterial("Mat_Roof", new Color(0.4f, 0.15f, 0.12f)); // Red Roof
-            Material zoneMat = CreateColoredMaterial("Mat_SafeZone", new Color(0.1f, 0.6f, 1.0f, 0.35f)); // Semi-transparent Blue
+            // 4. Create Realistic Materials
+            Material groundMat = CreateColoredMaterial("Mat_Terrain", new Color(0.20f, 0.35f, 0.18f)); // Tactical Grass Green
+            Material roadMat = CreateColoredMaterial("Mat_Road", new Color(0.18f, 0.18f, 0.20f)); // Asphalt Black/Gray
+            Material mountainMat = CreateColoredMaterial("Mat_Mountain", new Color(0.35f, 0.32f, 0.28f)); // Rock/Soil Gray
+            Material playerMat = CreateColoredMaterial("Mat_Player", new Color(0.12f, 0.25f, 0.50f)); // Tactical Navy Blue
+            Material visorMat = CreateColoredMaterial("Mat_Visor", new Color(0.1f, 0.95f, 1.0f)); // Glowing Visor Cyan
+            Material vestMat = CreateColoredMaterial("Mat_Vest", new Color(0.15f, 0.15f, 0.15f)); // Dark Vest Gray
+            Material rifleMat = CreateColoredMaterial("Mat_Rifle", new Color(0.08f, 0.08f, 0.10f)); // Gun Metal
+            Material scopeMat = CreateColoredMaterial("Mat_Scope", new Color(0.1f, 0.5f, 0.8f)); // Scope Glass
+            Material bldgMat = CreateColoredMaterial("Mat_Building", new Color(0.55f, 0.55f, 0.58f)); // Concrete Gray
+            Material bldgRoofMat = CreateColoredMaterial("Mat_Roof", new Color(0.45f, 0.18f, 0.15f)); // Terracotta Red Roof
+            Material treeFoliageMat = CreateColoredMaterial("Mat_Foliage", new Color(0.12f, 0.32f, 0.12f)); // Pine Green
+            Material treeTrunkMat = CreateColoredMaterial("Mat_Trunk", new Color(0.30f, 0.20f, 0.10f)); // Bark Brown
+            Material rockMat = CreateColoredMaterial("Mat_Rock", new Color(0.42f, 0.42f, 0.45f)); // Boulder Gray
+            Material zoneMat = CreateColoredMaterial("Mat_SafeZone", new Color(0.1f, 0.65f, 1.0f, 0.35f)); // Glowing Electric Blue
             Material crateGold = CreateColoredMaterial("Mat_Loot_AR47", new Color(1.0f, 0.75f, 0.1f)); // Gold Weapon Crate
             Material crateBlue = CreateColoredMaterial("Mat_Loot_Sub9", new Color(0.2f, 0.5f, 1.0f)); // Blue Weapon Crate
             Material crateRed = CreateColoredMaterial("Mat_Loot_Medkit", new Color(0.9f, 0.15f, 0.15f)); // Red Health Crate
-            Material crateYellow = CreateColoredMaterial("Mat_Loot_Ammo", new Color(0.9f, 0.9f, 0.2f)); // Yellow Ammo Crate
-            Material vehicleMat = CreateColoredMaterial("Mat_Vehicle", new Color(0.25f, 0.35f, 0.25f)); // Camo Green Vehicle
+            Material crateYellow = CreateColoredMaterial("Mat_Loot_Ammo", new Color(0.95f, 0.90f, 0.2f)); // Yellow Ammo Crate
+            Material vehicleMat = CreateColoredMaterial("Mat_Vehicle", new Color(0.22f, 0.32f, 0.22f)); // Military Camo Green
 
-            // 5. Create Ground Environment (500m x 500m)
+            // 5. Setup Sunlight & Atmosphere (PUBG / Free Fire Style)
+            var dirLightObj = GameObject.Find("Directional Light");
+            if (dirLightObj == null) dirLightObj = new GameObject("Directional Light");
+            var dirLight = dirLightObj.GetComponent<Light>();
+            if (dirLight == null) dirLight = dirLightObj.AddComponent<Light>();
+            dirLight.type = LightType.Directional;
+            dirLight.color = new Color(1.0f, 0.95f, 0.85f); // Warm Sunlight
+            dirLight.intensity = 1.35f;
+            dirLight.shadows = LightShadows.Soft;
+            dirLight.shadowStrength = 0.85f;
+            dirLightObj.transform.rotation = Quaternion.Euler(50f, -30f, 0f);
+
+            RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Trilight;
+            RenderSettings.ambientSkyColor = new Color(0.65f, 0.80f, 1.0f);
+            RenderSettings.ambientEquatorColor = new Color(0.70f, 0.78f, 0.70f);
+            RenderSettings.ambientGroundColor = new Color(0.28f, 0.25f, 0.20f);
+            RenderSettings.fog = true;
+            RenderSettings.fogColor = new Color(0.65f, 0.78f, 0.90f);
+            RenderSettings.fogMode = FogMode.ExponentialWithDistance;
+            RenderSettings.fogDensity = 0.0022f;
+
+            // 6. Create Ground Environment & Perimeter Mountains (500m x 500m)
+            var environmentRoot = new GameObject("Environment");
+
             var groundObj = GameObject.CreatePrimitive(PrimitiveType.Plane);
             groundObj.name = "GroundTerrain_500m";
+            groundObj.transform.SetParent(environmentRoot.transform);
             groundObj.transform.position = Vector3.zero;
             groundObj.transform.localScale = new Vector3(50f, 1f, 50f); // 500m x 500m plane
             SetMaterial(groundObj, groundMat);
 
-            // Create Roads connecting POIs
-            CreateRoad(new Vector3(0, 0.05f, 0), new Vector3(10f, 0.05f, 400f), roadMat); // North-South Main Highway
-            CreateRoad(new Vector3(0, 0.05f, 0), new Vector3(400f, 0.05f, 10f), roadMat); // East-West Main Highway
+            // Perimeter Mountain Range around map borders
+            CreatePerimeterMountains(environmentRoot.transform, mountainMat);
 
-            // 6. Create MapManager & Spawns & POI Towns
+            // Asphalt Highways
+            CreateRoad(environmentRoot.transform, new Vector3(0, 0.05f, 0), new Vector3(12f, 0.05f, 440f), roadMat); // North-South Highway
+            CreateRoad(environmentRoot.transform, new Vector3(0, 0.05f, 0), new Vector3(440f, 0.05f, 12f), roadMat); // East-West Highway
+
+            // Scatter Trees & Boulders
+            CreateFoliageAndRocks(environmentRoot.transform, treeFoliageMat, treeTrunkMat, rockMat);
+
+            // 7. Create MapManager & Spawns & POI Towns
             var mapMgrObj = new GameObject("MapManager");
             var mapMgr = mapMgrObj.AddComponent<MapManager>();
 
@@ -97,13 +132,13 @@ namespace BattleRoyale.Editor
             Create3DPOITown(mapMgrObj.transform, "South Docks", new Vector3(0, 0, -150f), 45f, bldgMat, bldgRoofMat, crateGold, crateBlue, crateRed, crateYellow);
             Create3DPOITown(mapMgrObj.transform, "Military Base", new Vector3(150f, 0, 0), 45f, bldgMat, bldgRoofMat, crateGold, crateBlue, crateRed, crateYellow);
 
-            // 7. Create 3D Player Character
+            // 8. Create Tactical 3D Player Character
             var playerObj = GameObject.CreatePrimitive(PrimitiveType.Capsule);
             playerObj.name = "Player";
             playerObj.transform.position = new Vector3(0, 1.5f, -10f);
             SetMaterial(playerObj, playerMat);
 
-            // Add Tactical Visor, Vest & Backpack to Player Mesh
+            // Visor Helmet, Tactical Vest & Backpack
             var visorObj = GameObject.CreatePrimitive(PrimitiveType.Cube);
             visorObj.name = "HelmetVisor";
             visorObj.transform.SetParent(playerObj.transform);
@@ -115,23 +150,31 @@ namespace BattleRoyale.Editor
             vestObj.name = "TacticalVest";
             vestObj.transform.SetParent(playerObj.transform);
             vestObj.transform.localPosition = new Vector3(0, 0f, 0f);
-            vestObj.transform.localScale = new Vector3(0.85f, 0.7f, 0.65f);
+            vestObj.transform.localScale = new Vector3(0.85f, 0.75f, 0.65f);
             SetMaterial(vestObj, vestMat);
 
             var backpackObj = GameObject.CreatePrimitive(PrimitiveType.Cube);
             backpackObj.name = "TacticalBackpack";
             backpackObj.transform.SetParent(playerObj.transform);
             backpackObj.transform.localPosition = new Vector3(0, 0.1f, -0.45f);
-            backpackObj.transform.localScale = new Vector3(0.6f, 0.7f, 0.4f);
+            backpackObj.transform.localScale = new Vector3(0.65f, 0.75f, 0.4f);
             SetMaterial(backpackObj, vestMat);
 
-            // Add 3D Rifle model held in hand
-            var rifleObj = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            rifleObj.name = "AR47_WeaponModel";
-            rifleObj.transform.SetParent(playerObj.transform);
-            rifleObj.transform.localPosition = new Vector3(0.45f, 0.1f, 0.5f);
-            rifleObj.transform.localScale = new Vector3(0.12f, 0.18f, 0.9f);
-            SetMaterial(rifleObj, rifleMat);
+            // Detailed 3D Assault Rifle (AR-47) in Hand
+            var rifleBody = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            rifleBody.name = "AR47_RifleBody";
+            rifleBody.transform.SetParent(playerObj.transform);
+            rifleBody.transform.localPosition = new Vector3(0.45f, 0.1f, 0.45f);
+            rifleBody.transform.localScale = new Vector3(0.12f, 0.18f, 0.85f);
+            SetMaterial(rifleBody, rifleMat);
+
+            var rifleScope = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            rifleScope.name = "RedDotScope";
+            rifleScope.transform.SetParent(rifleBody.transform);
+            rifleScope.transform.localPosition = new Vector3(0, 0.75f, 0.1f);
+            rifleScope.transform.localRotation = Quaternion.Euler(90f, 0, 0);
+            rifleScope.transform.localScale = new Vector3(0.4f, 0.25f, 0.4f);
+            SetMaterial(rifleScope, scopeMat);
 
             var charController = playerObj.GetComponent<CharacterController>();
             if (charController == null) charController = playerObj.AddComponent<CharacterController>();
@@ -151,10 +194,10 @@ namespace BattleRoyale.Editor
             var backpackInv = playerObj.AddComponent<PlayerBackpackInventory>();
             var interaction = playerObj.AddComponent<PlayerInteraction>();
 
-            // 8. Create 4x4 Offroad Vehicle
+            // 9. Create 4x4 Offroad Vehicle
             CreateOffroadVehicle(new Vector3(15f, 0.8f, -10f), vehicleMat, roadMat);
 
-            // 9. Configure Main Camera
+            // 10. Configure Main Camera (Third Person Over-the-Shoulder)
             var mainCamObj = Camera.main != null ? Camera.main.gameObject : new GameObject("Main Camera");
             var mainCam = mainCamObj.GetComponent<Camera>();
             if (mainCam == null) mainCam = mainCamObj.AddComponent<Camera>();
@@ -172,7 +215,7 @@ namespace BattleRoyale.Editor
             SetPrivateField(tpCam, "settings", camSettings);
             SetPrivateField(tpCam, "targetPlayer", playerObj.transform);
 
-            // 10. Create SafeZone Controller
+            // 11. Create SafeZone Controller
             var zoneObj = new GameObject("SafeZoneController");
             var zoneCtrl = zoneObj.AddComponent<SafeZoneController>();
             var wallVis = zoneObj.AddComponent<SafeZoneWallVisual>();
@@ -189,11 +232,11 @@ namespace BattleRoyale.Editor
             SetPrivateField(zoneCtrl, "settings", zoneSettings);
             SetPrivateField(zoneCtrl, "wallVisual", wallVis);
 
-            // 11. Create In-Game HUD UI Canvas
+            // 12. Create In-Game HUD UI Canvas
             var hudObj = new GameObject("BattleRoyaleHUD");
             hudObj.AddComponent<BattleRoyaleHudUI>();
 
-            // 12. Create Network & Backend Manager
+            // 13. Create Network & Backend Manager
             var netObj = new GameObject("NetworkManager");
             var netManager = netObj.AddComponent<CustomNetworkManager>();
             var serverBootstrap = netObj.AddComponent<HeadlessServerBootstrap>();
@@ -219,7 +262,7 @@ namespace BattleRoyale.Editor
             var poolObj = new GameObject("ObjectPoolManager");
             poolObj.AddComponent<ObjectPoolManager>();
 
-            // 13. Save Scene
+            // 14. Save Scene
             string scenePath = "Assets/Scenes/MainMap.unity";
             EditorSceneManager.SaveScene(scene, scenePath);
             AssetDatabase.Refresh();
@@ -227,13 +270,83 @@ namespace BattleRoyale.Editor
             Debug.Log($"✅ [Battle Royale Setup] MainMap scene successfully generated and saved at '{scenePath}'! Click PLAY to test.");
         }
 
-        private static void CreateRoad(Vector3 pos, Vector3 scale, Material roadMat)
+        private static void CreateRoad(Transform parent, Vector3 pos, Vector3 scale, Material roadMat)
         {
             var road = GameObject.CreatePrimitive(PrimitiveType.Cube);
             road.name = "RoadSegment";
+            road.transform.SetParent(parent);
             road.transform.position = pos;
             road.transform.localScale = scale;
             SetMaterial(road, roadMat);
+        }
+
+        private static void CreatePerimeterMountains(Transform parent, Material mountainMat)
+        {
+            var mountainGroup = new GameObject("PerimeterMountains");
+            mountainGroup.transform.SetParent(parent);
+
+            int count = 16;
+            float radius = 240f;
+            for (int i = 0; i < count; i++)
+            {
+                float angle = i * (360f / count) * Mathf.Deg2Rad;
+                Vector3 pos = new Vector3(Mathf.Cos(angle) * radius, 15f, Mathf.Sin(angle) * radius);
+                var mountain = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                mountain.name = $"Mountain_{i + 1}";
+                mountain.transform.SetParent(mountainGroup.transform);
+                mountain.transform.position = pos;
+                mountain.transform.localScale = new Vector3(60f, 30f, 60f);
+                SetMaterial(mountain, mountainMat);
+            }
+        }
+
+        private static void CreateFoliageAndRocks(Transform parent, Material foliageMat, Material trunkMat, Material rockMat)
+        {
+            var foliageGroup = new GameObject("FoliageAndRocks");
+            foliageGroup.transform.SetParent(parent);
+
+            System.Random rand = new System.Random(42); // Fixed seed for procedural consistency
+
+            // 40 Pine Trees
+            for (int i = 0; i < 40; i++)
+            {
+                float x = (float)(rand.NextDouble() * 360.0 - 180.0);
+                float z = (float)(rand.NextDouble() * 360.0 - 180.0);
+                if (Mathf.Abs(x) < 25f && Mathf.Abs(z) < 25f) continue; // Keep spawn clear
+
+                var treeObj = new GameObject($"PineTree_{i + 1}");
+                treeObj.transform.SetParent(foliageGroup.transform);
+                treeObj.transform.position = new Vector3(x, 0, z);
+
+                var trunk = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                trunk.name = "Trunk";
+                trunk.transform.SetParent(treeObj.transform);
+                trunk.transform.localPosition = new Vector3(0, 1.5f, 0);
+                trunk.transform.localScale = new Vector3(0.5f, 1.5f, 0.5f);
+                SetMaterial(trunk, trunkMat);
+
+                var foliage = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                foliage.name = "FoliageCone";
+                foliage.transform.SetParent(treeObj.transform);
+                foliage.transform.localPosition = new Vector3(0, 4.5f, 0);
+                foliage.transform.localScale = new Vector3(3.5f, 2.5f, 3.5f);
+                SetMaterial(foliage, foliageMat);
+            }
+
+            // 25 Boulders
+            for (int i = 0; i < 25; i++)
+            {
+                float x = (float)(rand.NextDouble() * 360.0 - 180.0);
+                float z = (float)(rand.NextDouble() * 360.0 - 180.0);
+                if (Mathf.Abs(x) < 25f && Mathf.Abs(z) < 25f) continue;
+
+                var rock = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                rock.name = $"Boulder_{i + 1}";
+                rock.transform.SetParent(foliageGroup.transform);
+                rock.transform.position = new Vector3(x, 0.8f, z);
+                rock.transform.localScale = new Vector3(2.5f, 1.6f, 2.8f);
+                SetMaterial(rock, rockMat);
+            }
         }
 
         private static void Create3DPOITown(Transform parent, string name, Vector3 pos, float radius, Material bldgMat, Material roofMat, Material crateGold, Material crateBlue, Material crateRed, Material crateYellow)

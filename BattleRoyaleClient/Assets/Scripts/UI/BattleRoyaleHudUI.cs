@@ -140,48 +140,69 @@ namespace BattleRoyale.UI
                 GameObject canvasObj = new GameObject("BattleRoyaleHUD_Canvas");
                 canvas = canvasObj.AddComponent<Canvas>();
                 canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-                canvasObj.AddComponent<CanvasScaler>();
+
+                CanvasScaler scaler = canvasObj.AddComponent<CanvasScaler>();
+                scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+                scaler.referenceResolution = new Vector2(1920, 1080);
+                scaler.matchWidthOrHeight = 0.5f;
+
                 canvasObj.AddComponent<GraphicRaycaster>();
-                transform.SetParent(canvasObj.transform, false);
+
+                GameObject hudRoot = new GameObject("HUDRoot");
+                hudRoot.transform.SetParent(canvasObj.transform, false);
+                RectTransform hudRect = hudRoot.AddComponent<RectTransform>();
+                hudRect.anchorMin = Vector2.zero;
+                hudRect.anchorMax = Vector2.one;
+                hudRect.offsetMin = Vector2.zero;
+                hudRect.offsetMax = Vector2.zero;
+
+                transform.SetParent(hudRoot.transform, false);
             }
+
+            RectTransform rootRect = GetComponent<RectTransform>();
+            if (rootRect == null) rootRect = gameObject.AddComponent<RectTransform>();
+            rootRect.anchorMin = Vector2.zero;
+            rootRect.anchorMax = Vector2.one;
+            rootRect.offsetMin = Vector2.zero;
+            rootRect.offsetMax = Vector2.zero;
 
             // Crosshair Center Dot
             CreateUIPanel("CrosshairDot", transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, 0), new Vector2(6, 6), new Color(1f, 1f, 1f, 0.9f));
-            CreateUIPanel("CrosshairLeft", transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(-12, 0), new Vector2(10, 2), new Color(1f, 1f, 1f, 0.7f));
-            CreateUIPanel("CrosshairRight", transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(12, 0), new Vector2(10, 2), new Color(1f, 1f, 1f, 0.7f));
-            CreateUIPanel("CrosshairTop", transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, 12), new Vector2(2, 10), new Color(1f, 1f, 1f, 0.7f));
-            CreateUIPanel("CrosshairBottom", transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, -12), new Vector2(2, 10), new Color(1f, 1f, 1f, 0.7f));
+            CreateUIPanel("CrosshairLeft", transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(-14, 0), new Vector2(12, 2), new Color(1f, 1f, 1f, 0.75f));
+            CreateUIPanel("CrosshairRight", transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(14, 0), new Vector2(12, 2), new Color(1f, 1f, 1f, 0.75f));
+            CreateUIPanel("CrosshairTop", transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, 14), new Vector2(2, 12), new Color(1f, 1f, 1f, 0.75f));
+            CreateUIPanel("CrosshairBottom", transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, -14), new Vector2(2, 12), new Color(1f, 1f, 1f, 0.75f));
 
             // Health Bar Background & Fill (Bottom Left)
-            GameObject hpBg = CreateUIPanel("HealthBg", transform, new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(20, 50), new Vector2(250, 22), new Color(0.1f, 0.1f, 0.1f, 0.8f));
-            GameObject hpFillObj = CreateUIPanel("HealthFill", hpBg.transform, new Vector2(0f, 0f), new Vector2(1f, 1f), new Vector2(0, 0), new Vector2(0, 0), new Color(0.2f, 0.8f, 0.2f, 0.9f));
+            GameObject hpBg = CreateUIPanel("HealthBg", transform, new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(160, 50), new Vector2(280, 24), new Color(0.1f, 0.1f, 0.1f, 0.85f));
+            GameObject hpFillObj = CreateUIPanel("HealthFill", hpBg.transform, new Vector2(0f, 0f), new Vector2(1f, 1f), new Vector2(0, 0), new Vector2(0, 0), new Color(0.2f, 0.85f, 0.25f, 0.95f));
             healthBarFill = hpFillObj.GetComponent<Image>();
             healthText = CreateUIText("HealthText", hpBg.transform, new Vector2(0f, 0f), new Vector2(1f, 1f), new Vector2(0, 0), "HP: 100 / 100", 14, Color.white, TextAnchor.MiddleCenter);
 
             // Armor Bar Background & Fill (Bottom Left above HP)
-            GameObject armorBg = CreateUIPanel("ArmorBg", transform, new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(20, 78), new Vector2(250, 16), new Color(0.1f, 0.1f, 0.1f, 0.8f));
-            GameObject armorFillObj = CreateUIPanel("ArmorFill", armorBg.transform, new Vector2(0f, 0f), new Vector2(1f, 1f), new Vector2(0, 0), new Vector2(0, 0), new Color(0.2f, 0.6f, 1.0f, 0.9f));
+            GameObject armorBg = CreateUIPanel("ArmorBg", transform, new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(160, 80), new Vector2(280, 18), new Color(0.1f, 0.1f, 0.1f, 0.85f));
+            GameObject armorFillObj = CreateUIPanel("ArmorFill", armorBg.transform, new Vector2(0f, 0f), new Vector2(1f, 1f), new Vector2(0, 0), new Vector2(0, 0), new Color(0.2f, 0.65f, 1.0f, 0.95f));
             armorBarFill = armorFillObj.GetComponent<Image>();
             armorText = CreateUIText("ArmorText", armorBg.transform, new Vector2(0f, 0f), new Vector2(1f, 1f), new Vector2(0, 0), "ARMOR: 75 / 100", 12, Color.white, TextAnchor.MiddleCenter);
 
             // Weapon & Ammo HUD (Bottom Right)
-            GameObject wpnBg = CreateUIPanel("WeaponBg", transform, new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(-20, 50), new Vector2(280, 60), new Color(0.1f, 0.1f, 0.1f, 0.85f));
+            GameObject wpnBg = CreateUIPanel("WeaponBg", transform, new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(-160, 55), new Vector2(280, 60), new Color(0.1f, 0.1f, 0.1f, 0.85f));
             weaponNameText = CreateUIText("WeaponNameText", wpnBg.transform, new Vector2(0f, 0.5f), new Vector2(1f, 1f), new Vector2(0, 0), "AR-47 (TACTICAL)", 16, new Color(1f, 0.85f, 0.2f), TextAnchor.MiddleCenter);
             ammoText = CreateUIText("AmmoText", wpnBg.transform, new Vector2(0f, 0f), new Vector2(1f, 0.5f), new Vector2(0, 0), "AMMO: 30 / 120", 14, Color.white, TextAnchor.MiddleCenter);
 
             // Weapon Slots Bar
-            weaponSlotText = CreateUIText("WeaponSlotsText", transform, new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(-20, 15), "[1] AR-47  |  [2] SUB-9  |  [3] SCATTER-12  |  [4] PISTOL-9", 12, new Color(0.8f, 0.8f, 0.8f), TextAnchor.MiddleRight);
+            weaponSlotText = CreateUIText("WeaponSlotsText", transform, new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(-220, 15), "[1] AR-47  |  [2] SUB-9  |  [3] SCATTER-12  |  [4] PISTOL-9", 12, new Color(0.85f, 0.85f, 0.85f), TextAnchor.MiddleRight);
 
             // Safe Zone Timer Banner (Top Center)
-            GameObject zoneBg = CreateUIPanel("ZoneTimerBg", transform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -35), new Vector2(350, 35), new Color(0.1f, 0.15f, 0.25f, 0.9f));
+            GameObject zoneBg = CreateUIPanel("ZoneTimerBg", transform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -35), new Vector2(380, 40), new Color(0.1f, 0.15f, 0.25f, 0.9f));
             zoneTimerText = CreateUIText("ZoneTimerText", zoneBg.transform, new Vector2(0f, 0f), new Vector2(1f, 1f), new Vector2(0, 0), "SAFE ZONE SHRINKING IN: 01:45", 14, new Color(0.4f, 0.9f, 1.0f), TextAnchor.MiddleCenter);
 
             // Match Alive & Kills (Top Right)
-            GameObject statsBg = CreateUIPanel("MatchStatsBg", transform, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-20, -35), new Vector2(220, 35), new Color(0.1f, 0.1f, 0.1f, 0.85f));
+            GameObject statsBg = CreateUIPanel("MatchStatsBg", transform, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-140, -35), new Vector2(240, 40), new Color(0.1f, 0.1f, 0.1f, 0.85f));
             matchStatsText = CreateUIText("MatchStatsText", statsBg.transform, new Vector2(0f, 0f), new Vector2(1f, 1f), new Vector2(0, 0), "ALIVE: 50  |  KILLS: 0", 14, Color.white, TextAnchor.MiddleCenter);
 
             // Kill Feed (Top Right below match stats)
-            killFeedText = CreateUIText("KillFeedText", transform, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-20, -120), "Survivor1 eliminated Bot_Alpha [AR-47]\nBot_Bravo eliminated Bot_Charlie [Sub-9]", 12, Color.yellow, TextAnchor.UpperRight);
+            killFeedText = CreateUIText("KillFeedText", transform, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-150, -130), "Survivor1 eliminated Bot_Alpha [AR-47]\nBot_Bravo eliminated Bot_Charlie [Sub-9]", 12, Color.yellow, TextAnchor.UpperRight);
 
             // Initial Kill Feed seed
             AddKillFeedEntry("Survivor1", "Bot_Alpha", "AR-47");
