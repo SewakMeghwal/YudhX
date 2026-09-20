@@ -134,7 +134,7 @@ namespace BattleRoyale.Backend.Stats
 
                 yield return request.SendWebRequest();
 
-                if (request.result == UnityWebRequest.Result.Success)
+                if (!request.isNetworkError && !request.isHttpError)
                 {
                     onComplete?.Invoke(true, request.downloadHandler.text);
                 }
@@ -158,7 +158,7 @@ namespace BattleRoyale.Backend.Stats
 
                 yield return request.SendWebRequest();
 
-                if (request.result == UnityWebRequest.Result.Success)
+                if (!request.isNetworkError && !request.isHttpError)
                 {
                     onComplete?.Invoke(true, request.downloadHandler.text);
                 }
