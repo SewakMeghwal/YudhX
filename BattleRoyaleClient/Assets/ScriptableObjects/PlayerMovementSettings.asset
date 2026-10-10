@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 616eacba3ec6dc94796d6b6020b42a4a, type: 3}
+  m_Name: PlayerMovementSettings
+  m_EditorClassIdentifier: 
+  walkSpeed: 3
+  runSpeed: 5.5
+  sprintSpeed: 8
+  crouchSpeed: 2.2
+  acceleration: 12
+  deceleration: 16
+  rotationSpeed: 720
+  airControlMultiplier: 0.4
+  jumpHeight: 1.35
+  gravity: -19.62
+  groundedStickyForce: -4
+  groundCheckRadius: 0.28
+  groundCheckOffset: 0.05
+  groundLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  standingHeight: 2
+  crouchingHeight: 1.2
+  standingCenter: {x: 0, y: 1, z: 0}
+  crouchingCenter: {x: 0, y: 0.6, z: 0}
+  crouchTransitionSpeed: 10
