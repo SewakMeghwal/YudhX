@@ -118,8 +118,13 @@ namespace BattleRoyale.Player
         {
             if (moveInput.sqrMagnitude < 0.001f) return Vector3.zero;
 
-            Vector3 cameraForward = Vector3.forward;
-            Vector3 cameraRight = Vector3.right;
+            if (cameraTransform == null && Camera.main != null)
+            {
+                cameraTransform = Camera.main.transform;
+            }
+
+            Vector3 cameraForward = transform.forward;
+            Vector3 cameraRight = transform.right;
 
             if (cameraTransform != null)
             {

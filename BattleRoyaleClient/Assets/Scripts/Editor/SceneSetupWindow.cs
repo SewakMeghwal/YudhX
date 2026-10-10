@@ -21,6 +21,7 @@ using BattleRoyale.Backend.Stats;
 using BattleRoyale.Utilities;
 using BattleRoyale.UI;
 using BattleRoyale.Vehicles;
+using BattleRoyale.Player.Animation;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -135,40 +136,7 @@ namespace BattleRoyale.Editor
             Create3DPOITown(mapMgrObj.transform, "South Docks", new Vector3(0, 0, -150f), 45f, bldgMat, bldgRoofMat, vestMat, sandbagMat, crateGold, crateBlue, crateRed, crateYellow);
             Create3DPOITown(mapMgrObj.transform, "Military Base", new Vector3(150f, 0, 0), 45f, bldgMat, bldgRoofMat, vestMat, sandbagMat, crateGold, crateBlue, crateRed, crateYellow);
 
-            // 9. Instantiate 3D Humanoid Soldier Player
-            GameObject playerObj = ProceduralAssetFactory.CreateHumanoidSoldier(playerMat, visorMat, vestMat, rifleMat, scopeMat);
-            playerObj.name = "Player";
-            playerObj.transform.position = new Vector3(0, 0.5f, -10f);
-
-            var charController = playerObj.GetComponent<CharacterController>();
-            if (charController == null) charController = playerObj.AddComponent<CharacterController>();
-            charController.height = 2.0f;
-            charController.center = new Vector3(0, 1.0f, 0);
-
-            var groundChecker = playerObj.AddComponent<GroundChecker>();
-            var animHooks = playerObj.AddComponent<PlayerAnimationHooks>();
-            var inputHandler = playerObj.AddComponent<PlayerInputHandler>();
-            var movement = playerObj.AddComponent<PlayerMovement>();
-            var playerCtrl = playerObj.AddComponent<PlayerController>();
-
-            SetPrivateField(playerCtrl, "settings", moveSettings);
-
-            var health = playerObj.AddComponent<PlayerHealth>();
-            var weaponInv = playerObj.AddComponent<PlayerWeaponInventory>();
-            var backpackInv = playerObj.AddComponent<PlayerBackpackInventory>();
-            var interaction = playerObj.AddComponent<PlayerInteraction>();
-
-            // Add AudioSource for procedural gunshots & footsteps
-            AudioSource audioSource = playerObj.AddComponent<AudioSource>();
-            audioSource.playOnAwake = false;
-
-            // 10. Instantiate 4x4 Offroad Buggy Vehicle
-            GameObject vehicleObj = ProceduralAssetFactory.Create4x4OffroadVehicle(vehicleMat, tireMat, vestMat, visorMat);
-            vehicleObj.name = "Vehicle_4x4";
-            vehicleObj.transform.position = new Vector3(15f, 0.8f, -10f);
-            vehicleObj.AddComponent<VehicleController>();
-
-            // 11. Configure Third Person Camera
+            // 9. Configure Third Person Camera
             var mainCamObj = Camera.main != null ? Camera.main.gameObject : new GameObject("Main Camera");
             var mainCam = mainCamObj.GetComponent<Camera>();
             if (mainCam == null) mainCam = mainCamObj.AddComponent<Camera>();
@@ -184,7 +152,43 @@ namespace BattleRoyale.Editor
             if (camInput == null) camInput = mainCamObj.AddComponent<CameraInputHandler>();
 
             SetPrivateField(tpCam, "settings", camSettings);
+
+            // 10. Instantiate 3D Humanoid Soldier Player
+            GameObject playerObj = ProceduralAssetFactory.CreateHumanoidSoldier(playerMat, visorMat, vestMat, rifleMat, scopeMat);
+            playerObj.name = "Player";
+            playerObj.transform.position = new Vector3(0, 0.5f, -10f);
+
+            var charController = playerObj.GetComponent<CharacterController>();
+            if (charController == null) charController = playerObj.AddComponent<CharacterController>();
+            charController.height = 2.0f;
+            charController.center = new Vector3(0, 1.0f, 0);
+
+            var groundChecker = playerObj.AddComponent<GroundChecker>();
+            var animHooks = playerObj.AddComponent<PlayerAnimationHooks>();
+            var inputHandler = playerObj.AddComponent<PlayerInputHandler>();
+            var movement = playerObj.AddComponent<PlayerMovement>();
+            var procAnim = playerObj.AddComponent<ProceduralHumanoidAnimator>();
+            var playerCtrl = playerObj.AddComponent<PlayerController>();
+
+            SetPrivateField(playerCtrl, "settings", moveSettings);
+
+            var health = playerObj.AddComponent<PlayerHealth>();
+            var weaponInv = playerObj.AddComponent<PlayerWeaponInventory>();
+            var backpackInv = playerObj.AddComponent<PlayerBackpackInventory>();
+            var interaction = playerObj.AddComponent<PlayerInteraction>();
+
+            // Add AudioSource for procedural gunshots & footsteps
+            AudioSource audioSource = playerObj.AddComponent<AudioSource>();
+            audioSource.playOnAwake = false;
+
+            // Link camera target to player transform
             SetPrivateField(tpCam, "targetPlayer", playerObj.transform);
+
+            // 11. Instantiate 4x4 Offroad Buggy Vehicle
+            GameObject vehicleObj = ProceduralAssetFactory.Create4x4OffroadVehicle(vehicleMat, tireMat, vestMat, visorMat);
+            vehicleObj.name = "Vehicle_4x4";
+            vehicleObj.transform.position = new Vector3(15f, 0.8f, -10f);
+            vehicleObj.AddComponent<VehicleController>();
 
             // 12. Create SafeZone Controller
             var zoneObj = new GameObject("SafeZoneController");
