@@ -147,6 +147,8 @@ namespace BattleRoyale.UI
                 scaler.matchWidthOrHeight = 0.5f;
 
                 canvasObj.AddComponent<GraphicRaycaster>();
+                canvasObj.AddComponent<MinimapRadarUI>();
+                canvasObj.AddComponent<CompassBarUI>();
 
                 GameObject hudRoot = new GameObject("HUDRoot");
                 hudRoot.transform.SetParent(canvasObj.transform, false);

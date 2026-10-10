@@ -15,6 +15,7 @@ using BattleRoyale.Multiplayer.Inventory;
 using BattleRoyale.Multiplayer.AntiCheat;
 using BattleRoyale.Multiplayer.Server;
 using BattleRoyale.Match;
+using BattleRoyale.Match.Drop;
 using BattleRoyale.Backend;
 using BattleRoyale.Backend.Stats;
 using BattleRoyale.Utilities;
@@ -48,29 +49,36 @@ namespace BattleRoyale.Editor
             var botConfig = CreateAsset<BotConfig>("Assets/ScriptableObjects/BotConfig.asset");
             var antiCheatSettings = CreateAsset<AntiCheatSettings>("Assets/ScriptableObjects/AntiCheatSettings.asset");
             var matchConfig = CreateAsset<MatchConfig>("Assets/ScriptableObjects/MatchConfig.asset");
+            var parachuteConfig = CreateAsset<ParachuteConfig>("Assets/ScriptableObjects/ParachuteConfig.asset");
 
-            // 4. Create Realistic Materials
-            Material groundMat = CreateColoredMaterial("Mat_Terrain", new Color(0.20f, 0.35f, 0.18f)); // Tactical Grass Green
-            Material roadMat = CreateColoredMaterial("Mat_Road", new Color(0.18f, 0.18f, 0.20f)); // Asphalt Black/Gray
-            Material mountainMat = CreateColoredMaterial("Mat_Mountain", new Color(0.35f, 0.32f, 0.28f)); // Rock/Soil Gray
-            Material playerMat = CreateColoredMaterial("Mat_Player", new Color(0.12f, 0.25f, 0.50f)); // Tactical Navy Blue
-            Material visorMat = CreateColoredMaterial("Mat_Visor", new Color(0.1f, 0.95f, 1.0f)); // Glowing Visor Cyan
-            Material vestMat = CreateColoredMaterial("Mat_Vest", new Color(0.15f, 0.15f, 0.15f)); // Dark Vest Gray
+            // 4. Generate Procedural Camouflage & Road Textures
+            Texture2D camoTex = ProceduralTextureGenerator.CreateCamoTexture(new Color(0.12f, 0.25f, 0.45f), new Color(0.18f, 0.18f, 0.22f), new Color(0.2f, 0.35f, 0.2f));
+            Texture2D roadTex = ProceduralTextureGenerator.CreateRoadTexture();
+
+            // 5. Create PBR Materials
+            Material groundMat = CreateColoredMaterial("Mat_Terrain", new Color(0.20f, 0.35f, 0.18f)); // Grass Green
+            Material roadMat = CreateMaterialWithTexture("Mat_Road", roadTex);
+            Material mountainMat = CreateColoredMaterial("Mat_Mountain", new Color(0.35f, 0.32f, 0.28f)); // Rock Gray
+            Material playerMat = CreateMaterialWithTexture("Mat_PlayerCamo", camoTex);
+            Material visorMat = CreateColoredMaterial("Mat_Visor", new Color(0.1f, 0.95f, 1.0f)); // Cyan Visor
+            Material vestMat = CreateColoredMaterial("Mat_Vest", new Color(0.15f, 0.15f, 0.15f)); // Dark Armor Vest
             Material rifleMat = CreateColoredMaterial("Mat_Rifle", new Color(0.08f, 0.08f, 0.10f)); // Gun Metal
             Material scopeMat = CreateColoredMaterial("Mat_Scope", new Color(0.1f, 0.5f, 0.8f)); // Scope Glass
             Material bldgMat = CreateColoredMaterial("Mat_Building", new Color(0.55f, 0.55f, 0.58f)); // Concrete Gray
-            Material bldgRoofMat = CreateColoredMaterial("Mat_Roof", new Color(0.45f, 0.18f, 0.15f)); // Terracotta Red Roof
+            Material bldgRoofMat = CreateColoredMaterial("Mat_Roof", new Color(0.45f, 0.18f, 0.15f)); // Red Roof
             Material treeFoliageMat = CreateColoredMaterial("Mat_Foliage", new Color(0.12f, 0.32f, 0.12f)); // Pine Green
             Material treeTrunkMat = CreateColoredMaterial("Mat_Trunk", new Color(0.30f, 0.20f, 0.10f)); // Bark Brown
             Material rockMat = CreateColoredMaterial("Mat_Rock", new Color(0.42f, 0.42f, 0.45f)); // Boulder Gray
-            Material zoneMat = CreateColoredMaterial("Mat_SafeZone", new Color(0.1f, 0.65f, 1.0f, 0.35f)); // Glowing Electric Blue
+            Material sandbagMat = CreateColoredMaterial("Mat_Sandbag", new Color(0.65f, 0.55f, 0.38f)); // Burlap Tan
+            Material zoneMat = CreateColoredMaterial("Mat_SafeZone", new Color(0.1f, 0.65f, 1.0f, 0.35f)); // Electric Blue
             Material crateGold = CreateColoredMaterial("Mat_Loot_AR47", new Color(1.0f, 0.75f, 0.1f)); // Gold Weapon Crate
             Material crateBlue = CreateColoredMaterial("Mat_Loot_Sub9", new Color(0.2f, 0.5f, 1.0f)); // Blue Weapon Crate
             Material crateRed = CreateColoredMaterial("Mat_Loot_Medkit", new Color(0.9f, 0.15f, 0.15f)); // Red Health Crate
             Material crateYellow = CreateColoredMaterial("Mat_Loot_Ammo", new Color(0.95f, 0.90f, 0.2f)); // Yellow Ammo Crate
-            Material vehicleMat = CreateColoredMaterial("Mat_Vehicle", new Color(0.22f, 0.32f, 0.22f)); // Military Camo Green
+            Material vehicleMat = CreateMaterialWithTexture("Mat_VehicleCamo", camoTex);
+            Material tireMat = CreateColoredMaterial("Mat_Tire", new Color(0.12f, 0.12f, 0.12f));
 
-            // 5. Setup Sunlight & Atmosphere (PUBG / Free Fire Style)
+            // 6. Setup Atmospheric Sunlight & Fog
             var dirLightObj = GameObject.Find("Directional Light");
             if (dirLightObj == null) dirLightObj = new GameObject("Directional Light");
             var dirLight = dirLightObj.GetComponent<Light>();
@@ -91,27 +99,22 @@ namespace BattleRoyale.Editor
             RenderSettings.fogMode = FogMode.Exponential;
             RenderSettings.fogDensity = 0.0022f;
 
-            // 6. Create Ground Environment & Perimeter Mountains (500m x 500m)
+            // 7. Create Ground Environment & Perimeter Mountains (500m x 500m)
             var environmentRoot = new GameObject("Environment");
 
             var groundObj = GameObject.CreatePrimitive(PrimitiveType.Plane);
             groundObj.name = "GroundTerrain_500m";
             groundObj.transform.SetParent(environmentRoot.transform);
             groundObj.transform.position = Vector3.zero;
-            groundObj.transform.localScale = new Vector3(50f, 1f, 50f); // 500m x 500m plane
+            groundObj.transform.localScale = new Vector3(50f, 1f, 50f);
             SetMaterial(groundObj, groundMat);
 
-            // Perimeter Mountain Range around map borders
             CreatePerimeterMountains(environmentRoot.transform, mountainMat);
-
-            // Asphalt Highways
-            CreateRoad(environmentRoot.transform, new Vector3(0, 0.05f, 0), new Vector3(12f, 0.05f, 440f), roadMat); // North-South Highway
-            CreateRoad(environmentRoot.transform, new Vector3(0, 0.05f, 0), new Vector3(440f, 0.05f, 12f), roadMat); // East-West Highway
-
-            // Scatter Trees & Boulders
+            CreateRoad(environmentRoot.transform, new Vector3(0, 0.05f, 0), new Vector3(12f, 0.05f, 440f), roadMat);
+            CreateRoad(environmentRoot.transform, new Vector3(0, 0.05f, 0), new Vector3(440f, 0.05f, 12f), roadMat);
             CreateFoliageAndRocks(environmentRoot.transform, treeFoliageMat, treeTrunkMat, rockMat);
 
-            // 7. Create MapManager & Spawns & POI Towns
+            // 8. Create MapManager & Spawns & POI Towns
             var mapMgrObj = new GameObject("MapManager");
             var mapMgr = mapMgrObj.AddComponent<MapManager>();
 
@@ -126,55 +129,16 @@ namespace BattleRoyale.Editor
                 spawnObj.AddComponent<SpawnPoint>();
             }
 
-            // Create 3D POI Town Structures & Loot Boxes
-            Create3DPOITown(mapMgrObj.transform, "Pochinki Outpost", Vector3.zero, 50f, bldgMat, bldgRoofMat, crateGold, crateBlue, crateRed, crateYellow);
-            Create3DPOITown(mapMgrObj.transform, "North Airfield", new Vector3(0, 0, 150f), 45f, bldgMat, bldgRoofMat, crateGold, crateBlue, crateRed, crateYellow);
-            Create3DPOITown(mapMgrObj.transform, "South Docks", new Vector3(0, 0, -150f), 45f, bldgMat, bldgRoofMat, crateGold, crateBlue, crateRed, crateYellow);
-            Create3DPOITown(mapMgrObj.transform, "Military Base", new Vector3(150f, 0, 0), 45f, bldgMat, bldgRoofMat, crateGold, crateBlue, crateRed, crateYellow);
+            // Create 3D POI Town Outposts with Watchtowers & Sandbags
+            Create3DPOITown(mapMgrObj.transform, "Pochinki Outpost", Vector3.zero, 50f, bldgMat, bldgRoofMat, vestMat, sandbagMat, crateGold, crateBlue, crateRed, crateYellow);
+            Create3DPOITown(mapMgrObj.transform, "North Airfield", new Vector3(0, 0, 150f), 45f, bldgMat, bldgRoofMat, vestMat, sandbagMat, crateGold, crateBlue, crateRed, crateYellow);
+            Create3DPOITown(mapMgrObj.transform, "South Docks", new Vector3(0, 0, -150f), 45f, bldgMat, bldgRoofMat, vestMat, sandbagMat, crateGold, crateBlue, crateRed, crateYellow);
+            Create3DPOITown(mapMgrObj.transform, "Military Base", new Vector3(150f, 0, 0), 45f, bldgMat, bldgRoofMat, vestMat, sandbagMat, crateGold, crateBlue, crateRed, crateYellow);
 
-            // 8. Create Tactical 3D Player Character
-            var playerObj = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+            // 9. Instantiate 3D Humanoid Soldier Player
+            GameObject playerObj = ProceduralAssetFactory.CreateHumanoidSoldier(playerMat, visorMat, vestMat, rifleMat, scopeMat);
             playerObj.name = "Player";
-            playerObj.transform.position = new Vector3(0, 1.5f, -10f);
-            SetMaterial(playerObj, playerMat);
-
-            // Visor Helmet, Tactical Vest & Backpack
-            var visorObj = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            visorObj.name = "HelmetVisor";
-            visorObj.transform.SetParent(playerObj.transform);
-            visorObj.transform.localPosition = new Vector3(0, 0.5f, 0.35f);
-            visorObj.transform.localScale = new Vector3(0.5f, 0.2f, 0.25f);
-            SetMaterial(visorObj, visorMat);
-
-            var vestObj = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            vestObj.name = "TacticalVest";
-            vestObj.transform.SetParent(playerObj.transform);
-            vestObj.transform.localPosition = new Vector3(0, 0f, 0f);
-            vestObj.transform.localScale = new Vector3(0.85f, 0.75f, 0.65f);
-            SetMaterial(vestObj, vestMat);
-
-            var backpackObj = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            backpackObj.name = "TacticalBackpack";
-            backpackObj.transform.SetParent(playerObj.transform);
-            backpackObj.transform.localPosition = new Vector3(0, 0.1f, -0.45f);
-            backpackObj.transform.localScale = new Vector3(0.65f, 0.75f, 0.4f);
-            SetMaterial(backpackObj, vestMat);
-
-            // Detailed 3D Assault Rifle (AR-47) in Hand
-            var rifleBody = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            rifleBody.name = "AR47_RifleBody";
-            rifleBody.transform.SetParent(playerObj.transform);
-            rifleBody.transform.localPosition = new Vector3(0.45f, 0.1f, 0.45f);
-            rifleBody.transform.localScale = new Vector3(0.12f, 0.18f, 0.85f);
-            SetMaterial(rifleBody, rifleMat);
-
-            var rifleScope = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-            rifleScope.name = "RedDotScope";
-            rifleScope.transform.SetParent(rifleBody.transform);
-            rifleScope.transform.localPosition = new Vector3(0, 0.75f, 0.1f);
-            rifleScope.transform.localRotation = Quaternion.Euler(90f, 0, 0);
-            rifleScope.transform.localScale = new Vector3(0.4f, 0.25f, 0.4f);
-            SetMaterial(rifleScope, scopeMat);
+            playerObj.transform.position = new Vector3(0, 0.5f, -10f);
 
             var charController = playerObj.GetComponent<CharacterController>();
             if (charController == null) charController = playerObj.AddComponent<CharacterController>();
@@ -194,10 +158,17 @@ namespace BattleRoyale.Editor
             var backpackInv = playerObj.AddComponent<PlayerBackpackInventory>();
             var interaction = playerObj.AddComponent<PlayerInteraction>();
 
-            // 9. Create 4x4 Offroad Vehicle
-            CreateOffroadVehicle(new Vector3(15f, 0.8f, -10f), vehicleMat, roadMat);
+            // Add AudioSource for procedural gunshots & footsteps
+            AudioSource audioSource = playerObj.AddComponent<AudioSource>();
+            audioSource.playOnAwake = false;
 
-            // 10. Configure Main Camera (Third Person Over-the-Shoulder)
+            // 10. Instantiate 4x4 Offroad Buggy Vehicle
+            GameObject vehicleObj = ProceduralAssetFactory.Create4x4OffroadVehicle(vehicleMat, tireMat, vestMat, visorMat);
+            vehicleObj.name = "Vehicle_4x4";
+            vehicleObj.transform.position = new Vector3(15f, 0.8f, -10f);
+            vehicleObj.AddComponent<VehicleController>();
+
+            // 11. Configure Third Person Camera
             var mainCamObj = Camera.main != null ? Camera.main.gameObject : new GameObject("Main Camera");
             var mainCam = mainCamObj.GetComponent<Camera>();
             if (mainCam == null) mainCam = mainCamObj.AddComponent<Camera>();
@@ -215,12 +186,11 @@ namespace BattleRoyale.Editor
             SetPrivateField(tpCam, "settings", camSettings);
             SetPrivateField(tpCam, "targetPlayer", playerObj.transform);
 
-            // 11. Create SafeZone Controller
+            // 12. Create SafeZone Controller
             var zoneObj = new GameObject("SafeZoneController");
             var zoneCtrl = zoneObj.AddComponent<SafeZoneController>();
             var wallVis = zoneObj.AddComponent<SafeZoneWallVisual>();
 
-            // Create Electric Wall Cylinder
             var wallCylinder = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
             wallCylinder.name = "ElectricZoneWallMesh";
             wallCylinder.transform.SetParent(zoneObj.transform);
@@ -232,11 +202,11 @@ namespace BattleRoyale.Editor
             SetPrivateField(zoneCtrl, "settings", zoneSettings);
             SetPrivateField(zoneCtrl, "wallVisual", wallVis);
 
-            // 12. Create In-Game HUD UI Canvas
+            // 13. Create In-Game HUD UI Canvas & Minimap Radar & Compass
             var hudObj = new GameObject("BattleRoyaleHUD");
             hudObj.AddComponent<BattleRoyaleHudUI>();
 
-            // 13. Create Network & Backend Manager
+            // 14. Create Network & Backend Manager
             var netObj = new GameObject("NetworkManager");
             var netManager = netObj.AddComponent<CustomNetworkManager>();
             var serverBootstrap = netObj.AddComponent<HeadlessServerBootstrap>();
@@ -262,7 +232,7 @@ namespace BattleRoyale.Editor
             var poolObj = new GameObject("ObjectPoolManager");
             poolObj.AddComponent<ObjectPoolManager>();
 
-            // 14. Save Scene
+            // 15. Save Scene
             string scenePath = "Assets/Scenes/MainMap.unity";
             EditorSceneManager.SaveScene(scene, scenePath);
             AssetDatabase.Refresh();
@@ -305,14 +275,13 @@ namespace BattleRoyale.Editor
             var foliageGroup = new GameObject("FoliageAndRocks");
             foliageGroup.transform.SetParent(parent);
 
-            System.Random rand = new System.Random(42); // Fixed seed for procedural consistency
+            System.Random rand = new System.Random(42);
 
-            // 40 Pine Trees
             for (int i = 0; i < 40; i++)
             {
                 float x = (float)(rand.NextDouble() * 360.0 - 180.0);
                 float z = (float)(rand.NextDouble() * 360.0 - 180.0);
-                if (Mathf.Abs(x) < 25f && Mathf.Abs(z) < 25f) continue; // Keep spawn clear
+                if (Mathf.Abs(x) < 25f && Mathf.Abs(z) < 25f) continue;
 
                 var treeObj = new GameObject($"PineTree_{i + 1}");
                 treeObj.transform.SetParent(foliageGroup.transform);
@@ -333,7 +302,6 @@ namespace BattleRoyale.Editor
                 SetMaterial(foliage, foliageMat);
             }
 
-            // 25 Boulders
             for (int i = 0; i < 25; i++)
             {
                 float x = (float)(rand.NextDouble() * 360.0 - 180.0);
@@ -349,7 +317,7 @@ namespace BattleRoyale.Editor
             }
         }
 
-        private static void Create3DPOITown(Transform parent, string name, Vector3 pos, float radius, Material bldgMat, Material roofMat, Material crateGold, Material crateBlue, Material crateRed, Material crateYellow)
+        private static void Create3DPOITown(Transform parent, string name, Vector3 pos, float radius, Material bldgMat, Material roofMat, Material metalMat, Material sandbagMat, Material crateGold, Material crateBlue, Material crateRed, Material crateYellow)
         {
             var poiObj = new GameObject($"POI_{name}");
             poiObj.transform.SetParent(parent);
@@ -381,13 +349,15 @@ namespace BattleRoyale.Editor
             roof1.transform.localScale = new Vector3(1.1f, 0.1f, 1.1f);
             SetMaterial(roof1, roofMat);
 
-            // Building 2: Sniper Watchtower
-            var tower = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            tower.name = "SniperWatchtower";
+            // Military Watchtower
+            GameObject tower = ProceduralAssetFactory.CreateMilitaryWatchtower(bldgMat, metalMat, roofMat);
             tower.transform.SetParent(poiObj.transform);
-            tower.transform.localPosition = new Vector3(15f, 7.5f, 15f);
-            tower.transform.localScale = new Vector3(6f, 15f, 6f);
-            SetMaterial(tower, bldgMat);
+            tower.transform.localPosition = new Vector3(15f, 0, 15f);
+
+            // Sandbag Fortification Wall
+            GameObject sandbags = ProceduralAssetFactory.CreateSandbagBarrier(sandbagMat);
+            sandbags.transform.SetParent(poiObj.transform);
+            sandbags.transform.localPosition = new Vector3(0, 0, 18f);
 
             // Loot Crates around POI
             CreateLootCrate(poiObj.transform, "Loot_AR47", new Vector3(-5f, 0.6f, -5f), crateGold, LootRarity.Legendary);
@@ -409,7 +379,6 @@ namespace BattleRoyale.Editor
             SetPrivateField(pickup, "rarity", rarity);
             SetPrivateField(pickup, "quantity", 1);
 
-            // Glowing Light Shaft above Crate
             var lightObj = new GameObject("LootLight");
             lightObj.transform.SetParent(crate.transform);
             lightObj.transform.localPosition = Vector3.up * 1.5f;
@@ -420,41 +389,6 @@ namespace BattleRoyale.Editor
             light.intensity = 2f;
         }
 
-        private static void CreateOffroadVehicle(Vector3 pos, Material bodyMat, Material wheelMat)
-        {
-            var vehicleObj = new GameObject("Vehicle_4x4");
-            vehicleObj.transform.position = pos;
-            var vehicleCtrl = vehicleObj.AddComponent<VehicleController>();
-
-            // Car Body
-            var body = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            body.name = "VehicleBody";
-            body.transform.SetParent(vehicleObj.transform);
-            body.transform.localPosition = new Vector3(0, 0.5f, 0);
-            body.transform.localScale = new Vector3(2.2f, 1.2f, 4.2f);
-            SetMaterial(body, bodyMat);
-
-            // 4 Wheels
-            Vector3[] wheelOffsets = new Vector3[]
-            {
-                new Vector3(-1.2f, -0.2f, 1.4f),
-                new Vector3(1.2f, -0.2f, 1.4f),
-                new Vector3(-1.2f, -0.2f, -1.4f),
-                new Vector3(1.2f, -0.2f, -1.4f)
-            };
-
-            for (int i = 0; i < 4; i++)
-            {
-                var wheel = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-                wheel.name = $"Wheel_{i + 1}";
-                wheel.transform.SetParent(vehicleObj.transform);
-                wheel.transform.localPosition = wheelOffsets[i];
-                wheel.transform.localRotation = Quaternion.Euler(0, 0, 90f);
-                wheel.transform.localScale = new Vector3(0.8f, 0.25f, 0.8f);
-                SetMaterial(wheel, wheelMat);
-            }
-        }
-
         private static Material CreateColoredMaterial(string matName, Color color)
         {
             Material mat = new Material(Shader.Find("Standard"));
@@ -462,7 +396,7 @@ namespace BattleRoyale.Editor
             mat.color = color;
             if (color.a < 1.0f)
             {
-                mat.SetFloat("_Mode", 3); // Transparent
+                mat.SetFloat("_Mode", 3);
                 mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
                 mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
                 mat.SetInt("_ZWrite", 0);
@@ -471,6 +405,14 @@ namespace BattleRoyale.Editor
                 mat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
                 mat.renderQueue = 3000;
             }
+            return mat;
+        }
+
+        private static Material CreateMaterialWithTexture(string matName, Texture2D texture)
+        {
+            Material mat = new Material(Shader.Find("Standard"));
+            mat.name = matName;
+            mat.mainTexture = texture;
             return mat;
         }
 
